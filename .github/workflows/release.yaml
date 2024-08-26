@@ -30,7 +30,9 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Run build script
-        run: ./script/build-linux.sh
+        run: |
+          chmod +x ./script/build-linux.sh
+          ./script/build-linux.sh
         shell: bash
 
       - name: Setup tmate session
@@ -64,7 +66,9 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Run build script
-        run: ./script/build-macos.sh
+        run: |
+          chmod +x ./script/build-macos.sh
+          ./script/build-macos.sh
         shell: bash
 
       - name: Setup tmate session
