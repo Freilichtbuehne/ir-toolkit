@@ -1,0 +1,74 @@
+properties:
+  title: "macOS Example"
+  description: "This is an example configuration file for macOS"
+  author: "John Doe"
+  version: "1.0"
+
+launch_conditions:
+  os: ["macos"]
+  enabled: true
+  arch: ["x86", "x86_64", "aarch64", "arm"]
+  is_elevated: true
+
+actions:
+  - name: disable_network
+    type: command
+    attributes:
+      cmd: "sh"
+      args: ["-c", "networksetup -setairportpower en0 off"]
+      log_to_file: true
+
+  - name: activities
+    type: command
+    attributes:
+      cmd: "sh"
+      args: ["-c", "ps -e > ${LOOT_DIR}/processes.txt && lsof -i > ${LOOT_DIR}/open_files.txt"]
+      log_to_file: true
+
+  - name: disk_image
+    type: command
+    attributes:
+      cmd: "sh"
+      args: ["-c", "hdiutil create -srcdevice $(df / | tail -1 | awk '{print $1}') -format UDRW ${LOOT_DIR}/disk_image.dmg"]
+      log_to_file: true
+
+  - name: email_chat
+    type: store
+    attributes:
+      case_sensitive: false
+      patterns: |
+        /Users/*/Library/Mail/**/*
+        /Users/*/Library/Messages/**/*
+      size_limit: 5 GB
+
+  - name: browser
+    type: store
+    attributes:
+      case_sensitive: false
+      patterns: |
+        /Users/*/Library/Safari/History.db
+        /Users/*/Library/Application Support/Google/Chrome/Default/History
+      size_limit: 5 GB
+
+workflow:
+  - action: disable_network
+  - action: activities
+  - action: disk_image
+    timeout: 10s
+  - action: email_chat
+  - action: browser
+
+reporting:
+  zip_archive:
+    enabled: false
+    encryption:
+      enabled: false
+      public_key: "example_public.pem"
+      algorithm: CHACHA20-POLY1305
+    compression:
+      enabled: true
+      size_limit: 100 MB
+  metadata:
+    mac_times: true
+    checksums: true
+    paths: true

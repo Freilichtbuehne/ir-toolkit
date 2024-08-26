@@ -1,0 +1,13 @@
+[package]
+name = "config"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+utils.workspace = true
+system.workspace = true
+byte-unit = "5.1.4"
+serde = { version = "1.0.203", features = ["derive"] }
+serde_yaml = "0.9.34"
+log = "0.4.21"
+humantime = "2.1.0"

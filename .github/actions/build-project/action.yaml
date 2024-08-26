@@ -1,0 +1,67 @@
+name: Build Project
+description: Build a Rust project for a specific target
+
+inputs:
+  os:
+    description: 'Operating system'
+    required: true
+  target:
+    description: 'Build target'
+    required: true
+  shell:
+    description: 'Shell to use'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: stable
+        target: ${{ inputs.target }}
+
+    - name: Install dependencies (Ubuntu)
+      if: ${{ inputs.os == 'ubuntu-latest' }}
+      run: sudo apt-get install -y pkg-config libssl-dev
+      shell: ${{ inputs.shell }}
+
+    - name: Install dependencies (macOS)
+      if: ${{ inputs.os == 'macos-latest' }}
+      run: brew install openssl
+      shell: ${{ inputs.shell }}
+
+    - name: Install Strawberry Perl (Windows)
+      if: ${{ inputs.os == 'windows-latest' }}
+      run: choco install strawberryperl
+      shell: ${{ inputs.shell }}
+
+    - name: Install OpenSSL (Windows)
+      if: ${{ inputs.os == 'windows-latest' }}
+      run: choco install openssl
+      shell: ${{ inputs.shell }}
+
+    - name: Install cross (Linux/MacOS)
+      if: ${{ inputs.os != 'windows-latest' }}
+      run: cargo install cross
+      shell: ${{ inputs.shell }}
+
+    - name: Install cross (Windows)
+      if: ${{ inputs.os == 'windows-latest' }}
+      run: cargo install cross
+      shell: ${{ inputs.shell }}
+
+    - name: Build project with cross (Linux/MacOS)
+      if: ${{ inputs.os != 'windows-latest' }}
+      env:
+        RUSTFLAGS: '-C target-feature=+crt-static'
+      run: cross build --release --target ${{ inputs.target }}
+      shell: ${{ inputs.shell }}
+
+    - name: Build project with cross (Windows)
+      if: ${{ inputs.os == 'windows-latest' }}
+      env:
+        RUSTFLAGS: '-C target-feature=+crt-static'
+      run: cross build --release --target ${{ inputs.target }}
+      shell: ${{ inputs.shell }}

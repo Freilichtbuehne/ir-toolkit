@@ -1,0 +1,235 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  fmt:
+    name: Check Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./.github/actions/check-format
+
+  build-linux:
+    name: (Linux) Build Project
+    needs: fmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          target: x86_64-unknown-linux-gnu
+
+      - name: Set up cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Run build script
+        run: ./script/build-linux.sh
+        shell: bash
+
+      - name: Setup tmate session
+        if: ${{ failure() }}
+        uses: mxschmitt/action-tmate@v3
+
+      - name: Upload artifacts
+        run: |
+          find target/x86_64-unknown-linux-gnu/release/ -type f ! -executable -delete
+          find target/x86_64-unknown-linux-gnu/release/ -mindepth 1 -type d -exec rm -rf {} +
+          for f in target/x86_64-unknown-linux-gnu/release/*; do mv $f $f-x86_64-unknown-linux-gnu; done
+      - uses: actions/upload-artifact@v2
+        with:
+          name: build-unknown-linux-gnu
+          path: target/x86_64-unknown-linux-gnu/release/
+
+  build-macos:
+    name: (macOS) Build Project
+    needs: fmt
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          target: x86_64-apple-darwin
+
+      - name: Set up cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Run build script
+        run: ./script/build-macos.sh
+        shell: bash
+
+      - name: Setup tmate session
+        if: ${{ failure() }}
+        uses: mxschmitt/action-tmate@v3
+
+      - name: Upload artifacts
+        run: |
+          mkdir -p bins
+          find target/x86_64-apple-darwin/release/ -type f -exec sh -c 'test -x {} || rm {}' \;
+          find target/x86_64-apple-darwin/release/ -mindepth 1 -type d -exec rm -rf {} +
+          for f in target/x86_64-apple-darwin/release/*; do mv "$f" "$f-x86_64-apple-darwin"; done
+          cp -r target/x86_64-apple-darwin/release/* bins/
+
+          find target/aarch64-apple-darwin/release/ -type f -exec sh -c 'test -x {} || rm {}' \;
+          find target/aarch64-apple-darwin/release/ -mindepth 1 -type d -exec rm -rf {} +
+          for f in target/aarch64-apple-darwin/release/*; do mv "$f" "$f-aarch64-apple-darwin"; done
+          cp -r target/aarch64-apple-darwin/release/* bins/
+      - uses: actions/upload-artifact@v2
+        with:
+          name: build-apple-darwin
+          path: bins/
+
+  build-windows:
+    name: (Windows) Build Project
+    needs: fmt
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          target: x86_64-pc-windows-msvc
+
+      - name: Set up cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Run build script
+        run: ./script/build-windows.ps1
+        shell: pwsh
+
+      - name: Setup tmate session
+        if: ${{ failure() }}
+        uses: mxschmitt/action-tmate@v3
+
+      - name: Upload artifacts
+        run: |
+          Get-ChildItem -Path target\x86_64-pc-windows-msvc\release\ -File | Where-Object { -not $_.Attributes -contains 'Executable' } | Remove-Item
+          Get-ChildItem -Path target\x86_64-pc-windows-msvc\release\ -Directory -Recurse | Remove-Item -Recurse -Force
+          foreach ($f in Get-ChildItem -Path target\x86_64-pc-windows-msvc\release\) {
+            if ($f.Extension -eq '.exe') {
+              $newName = "$($f.DirectoryName)\$($f.BaseName)-x86_64-pc-windows-msvc$($f.Extension)"
+              Rename-Item -Path $f.FullName -NewName $newName
+            } else {
+              $newName = "$($f.FullName)-x86_64-pc-windows-msvc"
+              Rename-Item -Path $f.FullName -NewName $newName
+            }
+          }
+        shell: pwsh
+      - uses: actions/upload-artifact@v2
+        with:
+          name: build-pc-windows-msvc
+          path: target/x86_64-pc-windows-msvc/release/
+
+  create_release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: [build-linux, build-macos, build-windows]
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Download artifacts (Linux)
+        uses: actions/download-artifact@v2
+        with:
+          name: build-unknown-linux-gnu
+          path: |
+            artifacts/linux
+
+      - name: Download artifacts (macOS)
+        uses: actions/download-artifact@v2
+        with:
+          name: build-apple-darwin
+          path: artifacts/macos
+
+      - name: Download artifacts (Windows)
+        uses: actions/download-artifact@v2
+        with:
+          name: build-pc-windows-msvc
+          path: artifacts/windows
+
+      - name: Prepare release directory
+        run: |
+          mkdir release
+          mkdir release/bin
+          mkdir release/bin/linux
+          mkdir release/bin/macos
+          mkdir release/bin/windows
+          mkdir release/custom_files
+          cp -r output/keys release/
+          cp -r output/workflows release/
+          cp output/config.yaml release/
+          cp output/run.* release/
+
+          echo "Listing contents of artifacts/linux:"
+          ls -l artifacts/linux
+
+          echo "Listing contents of artifacts/macos:"
+          ls -l artifacts/macos
+
+          echo "Listing contents of artifacts/windows:"
+          ls -l artifacts/windows
+
+          chmod +x artifacts/linux/*
+          chmod +x artifacts/macos/*
+
+          find artifacts/linux -type f -executable -exec cp {} release/bin/linux/ \;
+          find artifacts/macos -type f -executable -exec cp {} release/bin/macos/ \;
+          find artifacts/windows -type f \( -iname "*.exe" \) -exec cp {} release/bin/windows/ \;
+        shell: bash
+
+      - name: Extract changelog
+        env:
+          REF: ${{ github.ref }}
+        run: |
+          sed -n "/^## ${REF:10}/,/^## /{/^## /b;p}" CHANGELOG.md > ./RELEASE_CHANGELOG
+        shell: bash
+
+      - name: Create checksum and add to changelog
+        run: |
+            SUMS=""
+            for FILE in release/bin/**/*; do
+              SUM=$(sha256sum $FILE | cut -d " " -f 1)
+              FILENAME=$(basename $FILE)
+              SUMS="$SUMS$FILENAME: $SUM\n"
+            done
+            SUMS=${SUMS::-2}
+            echo -e "\n#### SHA256 Checksums:\n\`\`\`\n$SUMS\n\`\`\`\n" >> ./RELEASE_CHANGELOG
+            echo -e "$SUMS" > checksums.txt
+        shell: bash
+
+      - name: Create release zip
+        run: zip -r release.zip release
+        shell: bash
+
+      - name: Upload release asset
+        uses: actions/upload-artifact@v2
+        with:
+          name: release
+          path: release.zip
+
+      - name: Upload app bundle to release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: ${{ github.event.release.tag_name }}
+          draft: false
+          prerelease: false
+          files: |
+            release.zip
+            checksums.txt
+          body_path: ./RELEASE_CHANGELOG
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+permissions:
+  contents: write

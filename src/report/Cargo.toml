@@ -1,0 +1,10 @@
+[package]
+name = "report"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+system.workspace = true
+utils.workspace = true
+log = "0.4.21"
+chrono = "0.4.38"

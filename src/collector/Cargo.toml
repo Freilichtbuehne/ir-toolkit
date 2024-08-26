@@ -1,0 +1,18 @@
+[package]
+name = "collector"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "collector"
+path = "src/main.rs"
+
+[dependencies]
+system.workspace = true
+privileges.workspace = true
+workflow.workspace = true
+logging.workspace = true
+config.workspace = true
+utils.workspace = true
+log = "0.4.21"
+clap = "4.5.6"

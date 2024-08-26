@@ -1,0 +1,9 @@
+[package]
+name = "system"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+privileges.workspace = true
+dirs = "5.0.1"
+whoami = "1.5.1"

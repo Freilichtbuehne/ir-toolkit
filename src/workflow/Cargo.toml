@@ -1,0 +1,24 @@
+[package]
+name = "workflow"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+system.workspace = true
+storage.workspace = true
+crypto.workspace = true
+report.workspace = true
+config.workspace = true
+actions.workspace = true
+utils.workspace = true
+indicatif = "0.17.8"
+log = "0.4.21"
+tokio = { version = "1.38.1", features = ["time", "rt", "rt-multi-thread"] }
+futures = "0.3.30"
+regex = "1.10.6"
+
+[dev-dependencies]
+serde_yaml = "0.9.34"
+
+[lib]
+path = "src/workflow.rs"

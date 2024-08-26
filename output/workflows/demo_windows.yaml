@@ -1,0 +1,79 @@
+properties:
+  title: "Windows Demo"
+  description: "This is a demo"
+  author: "John Doe"
+  version: "1.0"
+
+launch_conditions:
+  os: ["windows"]
+  enabled: false
+  arch: ["x86", "x86_64", "aarch64", "arm"]
+  is_elevated: false
+  custom_command:
+    cmd: "cmd"
+    args: ["/c", "dir", "${USER_HOME}"]
+    contains_any: ["Downloads", "Documents"]
+
+actions:
+  - name: whoami
+    type: command
+    attributes:
+      cmd: "cmd"
+      args: ["/c", "whoami"]
+      log_to_file: true
+
+  - name: pdf_files
+    type: yara
+    attributes:
+      rules_paths: |
+        ${CUSTOM_FILES_DIR}\\yara\\*.yara
+      files_to_scan: |
+        ${USER_HOME}\\Downloads\\*
+      store_on_match: true
+      scan_timeout: 4s
+
+  - name: executables
+    type: store
+    attributes:
+      case_sensitive: false
+      patterns: |
+        ${USER_HOME}/Downloads/**/*.exe
+      size_limit: 10 GB
+
+  - name: terminal
+    type: terminal
+    attributes:
+      wait: true
+      separate_window: true
+      enable_transcript: true
+
+  - name: autorunsc
+    type: binary
+    attributes:
+      path: "autorunsc.exe"
+      log_to_file: true
+
+workflow:
+  - action: autorunsc
+    timeout: 20s
+    parallel: true
+  - action: whoami
+    on_error: abort
+  - action: pdf_files
+  - action: executables
+  - action: terminal
+
+reporting:
+  zip_archive:
+    enabled: false
+    encryption:
+      enabled: true
+      public_key: "example_public.pem"
+      algorithm: CHACHA20-POLY1305
+    compression:
+      enabled: true
+      size_limit: 100 MB
+  metadata:
+    mac_times: true
+    checksums: true
+    paths: true

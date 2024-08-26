@@ -1,0 +1,72 @@
+properties:
+  title: "Linux Example"
+  description: "This is an example configuration file for Linux"
+  author: "John Doe"
+  version: "1.0"
+
+launch_conditions:
+  os: ["linux"]
+  enabled: true
+  arch: ["x86", "x86_64"]
+  is_elevated: true
+
+actions:
+  - name: disable_network
+    type: command
+    attributes:
+      cmd: "sh"
+      args: ["-c", "ip link set $(ip route get 1.1.1.1 | awk '{print $5; exit}') down"]
+      log_to_file: true
+
+  - name: memory_dump
+    type: binary
+    attributes:
+      path: "dumpitforlinux"
+      args: ["-v", "${LOOT_DIR}/${DEVICE_NAME}.dmp"]
+      log_to_file: true
+
+  - name: activities
+    type: command
+    attributes:
+      cmd: "sh"
+      args: ["-c", "ps aux > ${LOOT_DIR}/processes.txt && netstat -tulnp > ${LOOT_DIR}/network_connections.txt && lsof > ${LOOT_DIR}/open_files.txt"]
+      log_to_file: true
+
+  - name: disk_image
+    type: command
+    attributes:
+      cmd: "sh"
+      args: ["-c", "${CUSTOM_FILES_DIR}/dc3dd if=$(df / | tail -1 | awk '{print $1}') of=${LOOT_DIR}/root_partition.img"]
+      log_to_file: true
+
+  - name: browser
+    type: store
+    attributes:
+      case_sensitive: false
+      patterns: |
+        /home/*/.mozilla/firefox/*.default-release/places.sqlite
+        /home/*/.config/google-chrome/Default/History
+      size_limit: 5 GB
+
+workflow:
+  - action: disable_network
+  - action: memory_dump
+  - action: activities
+  - action: disk_image
+    timeout: 10s
+  - action: browser
+
+reporting:
+  zip_archive:
+    enabled: false
+    encryption:
+      enabled: false
+      public_key: "example_public.pem"
+      algorithm: CHACHA20-POLY1305
+    compression:
+      enabled: true
+      size_limit: 100 MB
+  metadata:
+    mac_times: true
+    checksums: true
+    paths: true

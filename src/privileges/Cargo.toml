@@ -1,0 +1,18 @@
+[package]
+name = "privileges"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+utils.workspace = true
+log = "0.4.21"
+
+[target.'cfg(target_os = "windows")'.dependencies]
+winapi = { version = "0.3.9", features = ["winnt", "winbase", "processthreadsapi", "securitybaseapi", "winuser", "shellapi"] }
+
+[target.'cfg(any(target_os = "linux", target_os = "macos"))'.dependencies]
+libc = "0.2.155"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+core-foundation = "0.9.4"
+security-framework-sys = "2.11.0"

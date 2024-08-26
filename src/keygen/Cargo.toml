@@ -1,0 +1,17 @@
+[package]
+name = "keygen"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "keygen"
+path = "src/main.rs"
+
+[dependencies]
+crypto.workspace = true
+logging.workspace = true
+log = "0.4.21"
+clap = "4.5.6"
+
+[dev-dependencies]
+utils.workspace = true

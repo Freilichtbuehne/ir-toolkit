@@ -1,0 +1,9 @@
+[book]
+authors = ["freilichtbuehne"]
+language = "en"
+multilingual = false
+src = "src"
+title = "IR-Toolkit Guide"
+
+[preprocessor.image-size]
+command = "mdbook-image-size"

@@ -1,0 +1,1 @@
+cargo machete --with-metadata

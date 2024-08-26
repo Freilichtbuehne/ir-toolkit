@@ -1,0 +1,10 @@
+[package]
+name = "time"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+config.workspace = true
+log = "0.4.21"
+ntp = "0.5.0"
+chrono = "0.4.38"

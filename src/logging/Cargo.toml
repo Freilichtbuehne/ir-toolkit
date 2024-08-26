@@ -1,0 +1,17 @@
+[package]
+name = "logging"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+system.workspace = true
+time.workspace = true
+config.workspace = true
+log = "0.4.21"
+chrono = "0.4.38"
+chrono-tz = "0.9.0"
+fern = { version = "0.6.2", features = ["colored"] }
+
+[dev-dependencies]
+utils.workspace = true
+config.workspace = true

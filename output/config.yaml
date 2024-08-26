@@ -1,0 +1,25 @@
+time:
+  ## The time zone to use for the timestamps in the report.
+  ## e.g. "UTC", "Europe/Berlin", "Etc/GMT+2" or "UTC"
+  ## For a list of time zones see: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+  time_zone: "UTC"
+
+  ## Enable NTP time to ensure that the system time is correct.
+  ## WARNING: Enabling NTP time will delay the start of the workflow
+  ##
+  ## According to Federal Office for Information Security (BSI) in Germany,
+  ##   changing the system time itself, e.g. to cover tracks, can be an incident
+  ##   to be verified, both the hardware-based time from the RTC and the system
+  ##   time must be recorded and compared with one from an independent time source.
+  ## See: https://www.bsi.bund.de/EN/Themen/Oeffentliche-Verwaltung/Sicherheitspruefungen/IT-Forensik/forensik_node.html
+  ntp_enabled: false
+  ## Time in seconds to wait for an NTP server to respond.
+  ## If the NTP server does not respond within this time,
+  ##   the next server in ntp_servers will be tried.
+  ## If set to 0, no timeout is used.
+  ntp_timeout: 2
+  ntp_servers: ["0.pool.ntp.org:123", "1.pool.ntp.org:123"]
+
+## If set to true, the collector will attempt to elevate its privileges
+## If set to false, the collector will run with the privileges of the user executing it
+elevate: false

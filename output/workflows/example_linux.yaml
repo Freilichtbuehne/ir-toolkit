@@ -1,0 +1,72 @@
+properties:
+  title: "Linux Example"
+  description: "This is an example configuration file for Linux"
+  author: "John Doe"
+  version: "1.0"
+
+# Runs if all conditions are met
+launch_conditions:
+  os: ["linux"]
+  arch: ["x86", "x86_64", "aarch64", "arm"]
+  is_elevated: false
+
+actions:
+  - name: run_ls
+    type: binary
+    attributes:
+      path: "/bin/ls"
+      log_to_file: true
+
+  - name: run_top
+    type: command
+    attributes:
+      cmd: "/usr/bin/top"
+      args: ["-b", "-n", "1"]
+      log_to_file: true
+
+  - name: run_sleep
+    type: command
+    attributes:
+      cmd: "sleep"
+      args: ["20"]
+
+  - name: stat_loot_dir
+    type: command
+    attributes:
+      cmd: "stat"
+      args: ["${LOOT_DIR}"]
+      log_to_file: true
+
+  - name: terminal
+    type: terminal
+    attributes:
+      wait: true
+      separate_window: false
+      enable_transcript: true
+
+workflow:
+  - action: run_ls
+  - action: run_top
+    on_error: abort
+  - action: run_sleep
+    parallel: false
+    timeout: 2s
+    on_error:
+      goto: terminal
+  - action: stat_loot_dir
+  - action: terminal
+
+reporting:
+  zip_archive:
+    enabled: false
+    encryption:
+      enabled: true
+      public_key: "example_public.pem"
+      algorithm: CHACHA20-POLY1305
+    compression:
+      enabled: true
+      size_limit: "100 MB"
+  metadata:
+    mac_times: true
+    checksums: true
+    paths: true

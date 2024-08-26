@@ -1,0 +1,38 @@
+[workspace]
+members = [
+    "src/actions",
+    "src/collector",
+    "src/config",
+    "src/crypto",
+    "src/keygen",
+    "src/logging",
+    "src/privileges",
+    "src/report",
+    "src/storage",
+    "src/system",
+    "src/time",
+    "src/unpacker",
+    "src/workflow",
+    "src/config",
+    "src/utils",
+]
+
+default-members = [
+    "src/collector",
+    "src/unpacker",
+    "src/keygen",
+]
+resolver = "2"
+
+[workspace.dependencies]
+crypto = { path = "src/crypto" }
+workflow = { path = "src/workflow" }
+logging = { path = "src/logging" }
+privileges = { path = "src/privileges" }
+system = { path = "src/system" }
+time = { path = "src/time" }
+storage = { path = "src/storage" }
+config = { path = "src/config" }
+report = { path = "src/report" }
+utils = { path = "src/utils" }
+actions = { path = "src/actions" }

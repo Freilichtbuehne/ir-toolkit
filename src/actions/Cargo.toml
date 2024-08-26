@@ -1,0 +1,23 @@
+[package]
+name = "actions"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+config.workspace = true
+utils.workspace = true
+system.workspace = true
+storage.workspace = true
+csv = "1.3.0"
+log = "0.4.21"
+indicatif = "0.17.8"
+yara = { version = "0.28.0", features = ["vendored"] }
+rayon = "1.10.0"
+serde = { version = "1.0.203", features = ["derive"] }
+tokio = { version = "1.38.1", features = ["full", "test-util"] }
+futures = "0.3.30"
+process-wrap = { version = "8.0.2", features = ["tokio1"] }
+
+[dev-dependencies]
+report.workspace = true
+ntest = "0.9.3"

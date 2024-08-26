@@ -1,0 +1,88 @@
+properties:
+  title: "Windows Example"
+  description: "This is an example configuration file for Windows"
+  author: "John Doe"
+  version: "1.0"
+
+launch_conditions:
+  os: ["windows"]
+  enabled: true
+  arch: ["x86", "x86_64"]
+  is_elevated: true
+
+actions:
+  - name: disable_network
+    type: command
+    attributes:
+      cmd: "cmd"
+      args: ["/c", "${CUSTOM_FILES_DIR}\\disable_network.bat"]
+      log_to_file: true
+
+  - name: memory_dump
+    type: binary
+    attributes:
+      path: "winpmem_mini_${ARCH}.exe"
+      args: ["${LOOT_DIR}\\${DEVICE_NAME}.dmp"]
+      log_to_file: true
+
+  - name: clipboard
+    type: command
+    attributes:
+      cmd: "powershell"
+      args: ["-c", "Get-Clipboard"]
+      log_to_file: true
+
+  - name: disk_image
+    type: binary
+    attributes:
+      path: "ftk/FTK Imager.exe"
+      log_to_file: true
+
+  - name: registry_dump
+    type: command
+    attributes:
+      cmd: "cmd"
+      args: ["/c", "reg save HKLM\\SYSTEM ${LOOT_DIR}\\registry_dump.reg"]
+      log_to_file: true
+
+  - name: event_log
+    type: command
+    attributes:
+      cmd: "powershell"
+      args: ["-c", "wevtutil epl System ${LOOT_DIR}\\system.evtx"]
+      log_to_file: true
+
+  - name: browser
+    type: store
+    attributes:
+      case_sensitive: false
+      patterns: |
+        ${USER_HOME}/AppData/Local/Google/Chrome/User Data/Default/History
+        ${USER_HOME}/AppData/Roaming/Mozilla/Firefox/Profiles/*/places.sqlite
+      size_limit: 5 GB
+
+workflow:
+  - action: disable_network
+  - action: memory_dump
+    timeout: 10s
+  - action: clipboard
+  - action: disk_image
+    timeout: 10s
+  - action: registry_dump
+  - action: event_log
+  - action: browser
+
+reporting:
+  zip_archive:
+    enabled: false
+    encryption:
+      enabled: false
+      public_key: "example_public.pem"
+      algorithm: CHACHA20-POLY1305
+    compression:
+      enabled: true
+      size_limit: 100 MB
+  metadata:
+    mac_times: true
+    checksums: true
+    paths: true

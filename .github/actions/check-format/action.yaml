@@ -1,0 +1,15 @@
+name: Check Format
+description: Check code formatting with cargo fmt
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: stable
+
+    - name: Check code formatting
+      run: cargo fmt --all -- --check
+      shell: bash

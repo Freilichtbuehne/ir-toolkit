@@ -1,0 +1,6 @@
+/target
+/output/reports
+/output/bin/*
+/output/custom_files/*
+/.vscode
+*.pdb

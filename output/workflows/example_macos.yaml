@@ -1,0 +1,37 @@
+properties:
+  title: "macOS Example"
+  description: "This is an example configuration file for macOS"
+  author: "John Doe"
+  version: "1.0"
+
+# Runs if all conditions are met
+launch_conditions:
+  # Single condition is met if any of the elements match
+  os: ["macos"]
+  arch: ["x86", "x86_64", "aarch64", "arm"]
+  is_elevated: true
+
+actions:
+  - name: run_whoami
+    type: command
+    attributes:
+      cmd: "whoami"
+      log_to_file: true
+
+workflow:
+  - action: run_whoami
+
+reporting:
+  zip_archive:
+    enabled: true
+    encryption:
+      enabled: true
+      public_key: "example_public.pem"
+      algorithm: AES-128-GCM
+    compression:
+      enabled: true
+      size_limit: "100 MB"
+  metadata:
+    mac_times: true
+    checksums: true
+    paths: true

@@ -1,0 +1,20 @@
+name: Run Tests
+description: Run tests for a Rust project
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: stable
+
+    - name: Install cargo-nextest
+      uses: taiki-e/install-action@v2
+      with:
+        tool: nextest
+
+    - name: Run tests
+      run: cargo nextest run --workspace --no-fail-fast
+      shell: bash
